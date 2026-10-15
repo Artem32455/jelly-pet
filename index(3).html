@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html,body{margin:0}body{min-height:100%}</style>
+<title>Желейный питомец</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Unbounded:wght@500;700&display=swap">
+<style>
+  /* Layout: pet stage on the left, tabbed shop on the right; stacks to one column on phones.
+     Palette: aqua tile + raspberry accent, pet colors change per evolution stage. */
+  :root {
+    --bg: #e8f4f0;
+    --surface: #fbfffd;
+    --surface-2: #d5ebe5;
+    --ink: #0d2b31;
+    --ink-soft: #46676d;
+    --line: #b7d6cf;
+    --accent: #d0215c;
+    --accent-ink: #ffffff;
+    --gold: #f2b705;
+    --gold-ink: #2b1d00;
+    --good: #16825a;
+    --f-display: 'Unbounded', 'Rubik', 'Arial Black', sans-serif;
+    --f-body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1d21;
+      --surface: #11282d;
+      --surface-2: #19363c;
+      --ink: #e6f6f2;
+      --ink-soft: #92b6b3;
+      --line: #25484e;
+      --accent: #ff6b98;
+      --accent-ink: #200711;
+      --gold: #ffc933;
+      --gold-ink: #2b1d00;
+      --good: #4fd6a0;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1d21;
+    --surface: #11282d;
+    --surface-2: #19363c;
+    --ink: #e6f6f2;
+    --ink-soft: #92b6b3;
+    --line: #25484e;
+    --accent: #ff6b98;
+    --accent-ink: #200711;
+    --gold: #ffc933;
+    --gold-ink: #2b1d00;
+    --good: #4fd6a0;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 15px;
+    line-height: 1.4;
+    padding-block: 16px 28px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .app { max-width: 1080px; margin: 0 auto; display: grid; gap: 16px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .brand { margin: 0; font: 700 1.05rem/1.1 var(--f-display); letter-spacing: -0.01em; text-wrap: balance; }
+  .top-actions { display: flex; gap: 8px; }
+  .chip-btn {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 14px; font-weight: 700; font-size: 0.85rem;
+  }
+  .chip-btn:hover { border-color: var(--accent); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 16px; min-width: 0; }
+  .stage { display: grid; gap: 12px; }
+
+  .hud { display: grid; gap: 8px; }
+  .who { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #petName {
+    width: 9.5em; max-width: 100%;
+    background: transparent; border: 0; border-bottom: 2px dashed var(--line);
+    font: 700 1.15rem/1.2 var(--f-display); padding: 2px 0; border-radius: 0;
+  }
+  #petName:focus { border-bottom-color: var(--accent); outline: none; }
+  .stage-chip {
+    font-weight: 800; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--surface-2); border-radius: 999px; padding: 4px 10px; color: var(--ink-soft);
+  }
+  .evo { display: grid; gap: 4px; }
+  .evo small { color: var(--ink-soft); font-size: 0.8rem; }
+
+  .score { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .score span {
+    font: 700 clamp(2rem, 8vw, 3.1rem)/1.05 var(--f-display);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.02em; overflow-wrap: anywhere;
+  }
+  .score small { color: var(--ink-soft); font-weight: 700; }
+
+  .rates { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rate {
+    background: var(--surface-2); border-radius: 12px; padding: 6px 12px;
+    display: grid; gap: 0; min-width: 0;
+  }
+  .rate span { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  .rate b { font: 700 0.95rem/1.3 var(--f-display); font-variant-numeric: tabular-nums; }
+
+  .arena {
+    position: relative; border-radius: 18px; overflow: hidden;
+    background-color: var(--surface-2);
+    background-image: radial-gradient(circle at 1px 1px, var(--line) 1.4px, transparent 1.6px);
+    background-size: 22px 22px;
+  }
+  .arena canvas {
+    display: block; width: 100%; aspect-ratio: 400 / 340; max-width: 100%;
+    cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .frenzy {
+    position: absolute; left: 10px; top: 10px;
+    background: var(--gold); color: var(--gold-ink);
+    font: 700 0.8rem/1 var(--f-display); padding: 8px 12px; border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .gold {
+    position: absolute; width: 58px; height: 58px; border: 0; padding: 0;
+    background: radial-gradient(circle at 35% 30%, #fff3b0, var(--gold) 55%, #e08a00);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    animation: pulse 1.1s ease-in-out infinite;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,.25));
+  }
+  @keyframes pulse { 0%, 100% { transform: scale(1) rotate(-6deg); } 50% { transform: scale(1.18) rotate(6deg); } }
+
+  .meters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 420px) { .meters { grid-template-columns: minmax(0, 1fr); } }
+  .meter { display: grid; gap: 5px; }
+  .mrow { display: flex; justify-content: space-between; gap: 8px; font-size: 0.82rem; color: var(--ink-soft); font-weight: 700; }
+  .mrow b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .bar { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width 0.12s linear; }
+  .bar.sat > i { background: var(--good); }
+  .bar.evo-bar > i { background: var(--gold); }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    border: 2px solid var(--line); background: var(--surface); border-radius: 14px;
+    padding: 10px 16px; font-weight: 800; min-height: 44px;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.gift { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+  .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+
+  .panel { display: grid; gap: 12px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tab {
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 14px; font-weight: 800; font-size: 0.88rem; color: var(--ink-soft);
+  }
+  .tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .pane[hidden] { display: none; }
+  .pane { display: grid; gap: 10px; min-width: 0; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; justify-self: start; }
+  .seg button { border: 0; background: transparent; border-radius: 999px; padding: 5px 14px; font-weight: 800; font-size: 0.85rem; color: var(--ink-soft); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+  .list { display: grid; gap: 8px; }
+  .item {
+    display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    width: 100%; text-align: left; padding: 10px 12px; border-radius: 16px;
+    background: var(--surface); border: 2px solid var(--line);
+  }
+  .item .own {
+    display: grid; place-items: center; height: 46px; border-radius: 12px;
+    background: var(--surface-2); font: 700 0.95rem/1 var(--f-display); font-variant-numeric: tabular-nums;
+  }
+  .item .meta { display: grid; min-width: 0; }
+  .item .nm { font-weight: 800; overflow-wrap: anywhere; }
+  .item .ds { color: var(--ink-soft); font-size: 0.82rem; overflow-wrap: anywhere; }
+  .item .cost { font: 700 0.82rem/1.2 var(--f-display); text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-soft); max-width: 9em; }
+  .item.can { border-color: var(--accent); }
+  .item.can .cost { color: var(--accent); }
+  .item.can:hover { background: var(--surface-2); }
+  .item.locked { opacity: 0.6; border-style: dashed; cursor: default; }
+  .item.done { border-color: var(--good); }
+  .item.done .cost { color: var(--good); }
+
+  .ach-head { font-weight: 700; color: var(--ink-soft); }
+  .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .ach { border: 2px dashed var(--line); border-radius: 14px; padding: 10px; display: grid; gap: 2px; align-content: start; opacity: 0.7; }
+  .ach b { font-size: 0.9rem; }
+  .ach small { color: var(--ink-soft); font-size: 0.78rem; }
+  .ach.got { border-style: solid; border-color: var(--gold); opacity: 1; background: var(--surface-2); }
+
+  .lb-note { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+  #nick { flex: 1 1 120px; min-width: 0; background: var(--surface-2); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+  #nick:focus { border-color: var(--accent); outline: none; }
+  .lb-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .lb-row { display: grid; grid-template-columns: 2em minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); }
+  .lb-row.me { border-color: var(--accent); background: var(--surface-2); }
+  .lb-row .rk { font: 700 0.85rem var(--f-display); color: var(--ink-soft); }
+  .lb-row .nm2 { font-weight: 800; overflow-wrap: anywhere; min-width: 0; }
+  .lb-row .nm2 small { display: block; color: var(--ink-soft); font-weight: 600; font-size: 0.75rem; }
+  .lb-row .sc { font: 700 0.85rem var(--f-display); font-variant-numeric: tabular-nums; }
+
+  .block { border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+  .block h3 { margin: 0; font: 700 0.95rem/1.2 var(--f-display); }
+  .block p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; }
+  .stats div { background: var(--surface-2); border-radius: 12px; padding: 8px 12px; }
+  .stats dt { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  .stats dd { margin: 0; font: 700 0.95rem/1.3 var(--f-display); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  textarea {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 8px 10px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem; resize: vertical;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  #toasts {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; pointer-events: none;
+    display: grid; justify-items: center; gap: 8px;
+    padding: 0 max(16px, env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  }
+  .toast {
+    background: var(--ink); color: var(--bg); border-radius: 14px; padding: 10px 16px; font-weight: 700;
+    max-width: 420px; box-shadow: 0 6px 20px rgba(0,0,0,.25); animation: rise .25s ease-out;
+  }
+  .toast.gold { background: var(--gold); color: var(--gold-ink); }
+  .toast.out { opacity: 0; transition: opacity .3s; }
+  @keyframes rise { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gold, .toast { animation: none; }
+    .bar > i { transition: none; }
+  }
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1 class="brand">Желейный питомец</h1>
+    <div class="top-actions">
+      <button class="chip-btn" id="btnSound" type="button"></button>
+      <button class="chip-btn" id="btnTheme" type="button">Тема</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card stage" aria-label="Питомец">
+      <div class="hud">
+        <div class="who">
+          <input id="petName" maxlength="14" autocomplete="off" aria-label="Имя питомца">
+          <span class="stage-chip" id="stageChip"></span>
+        </div>
+        <div class="evo">
+          <div class="bar evo-bar"><i id="evoBar"></i></div>
+          <small id="evoText"></small>
+        </div>
+      </div>
+
+      <div class="score"><span id="jelly">0</span><small>желе</small></div>
+
+      <div class="rates">
+        <div class="rate"><span>за тык</span><b id="rClick">1</b></div>
+        <div class="rate"><span>в секунду</span><b id="rPps">0</b></div>
+        <div class="rate"><span>бонус</span><b id="rMult">×1</b></div>
+      </div>
+
+      <div class="arena" id="arena">
+        <canvas id="cv" tabindex="0" role="button" aria-label="Погладь питомца, чтобы получить желе"></canvas>
+        <button id="gold" class="gold" type="button" hidden aria-label="Золотая звезда, поймай её ради бонуса"></button>
+        <div id="frenzy" class="frenzy" hidden></div>
+      </div>
+
+      <div class="meters">
+        <div class="meter">
+          <div class="mrow"><span>Разгон</span><b id="comboTxt">×1</b></div>
+          <div class="bar"><i id="comboBar"></i></div>
+        </div>
+        <div class="meter">
+          <div class="mrow"><span>Сытость</span><b id="satTxt"></b></div>
+          <div class="bar sat"><i id="satBar"></i></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="feed" class="btn primary" type="button"></button>
+        <button id="gift" class="btn gift" type="button" hidden></button>
+      </div>
+    </section>
+
+    <section class="card panel" aria-label="Магазин и прогресс">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" type="button" data-tab="shop" aria-selected="true">Помощники</button>
+        <button class="tab" role="tab" type="button" data-tab="ups" aria-selected="false">Усиления</button>
+        <button class="tab" role="tab" type="button" data-tab="ach" aria-selected="false">Награды</button>
+        <button class="tab" role="tab" type="button" data-tab="lb" aria-selected="false">Рейтинг</button>
+        <button class="tab" role="tab" type="button" data-tab="more" aria-selected="false">Звёзды и сохранение</button>
+      </div>
+
+      <div class="pane" id="pane-shop" role="tabpanel">
+        <div class="seg" id="modeSeg" role="group" aria-label="Сколько покупать за раз">
+          <button type="button" data-mode="1">×1</button>
+          <button type="button" data-mode="10">×10</button>
+          <button type="button" data-mode="0">Макс</button>
+        </div>
+        <div class="list" id="shopList"></div>
+      </div>
+
+      <div class="pane" id="pane-ups" role="tabpanel" hidden>
+        <div class="list" id="upList"></div>
+      </div>
+
+      <div class="pane" id="pane-ach" role="tabpanel" hidden>
+        <div class="ach-head" id="achHead"></div>
+        <div class="ach-grid" id="achGrid"></div>
+      </div>
+
+      <div class="pane" id="pane-lb" role="tabpanel" hidden>
+        <p class="lb-note" id="lbNote"></p>
+        <div class="row">
+          <input id="nick" maxlength="14" autocomplete="off" placeholder="Твой ник" aria-label="Твой ник в рейтинге">
+          <button id="lbSend" class="btn primary" type="button">Отправить результат</button>
+          <button id="lbRefresh" class="btn" type="button">Обновить</button>
+        </div>
+        <ol class="lb-list" id="lbList"></ol>
+      </div>
+
+      <div class="pane" id="pane-more" role="tabpanel" hidden>
+        <div class="block">
+          <h3>Перерождение</h3>
+          <p>Питомец начинает заново, а ты получаешь звёзды. Каждая звезда навсегда даёт +25% ко всему желе. Форма питомца и награды остаются.</p>
+          <p id="pInfo"></p>
+          <div class="row"><button id="pBtn" class="btn primary" type="button"></button></div>
+        </div>
+        <div class="block">
+          <h3>Статистика</h3>
+          <dl class="stats" id="stats"></dl>
+        </div>
+        <div class="block">
+          <h3>Сохранение</h3>
+          <p>Игра сохраняется сама в этом браузере. Код ниже переносит прогресс на другое устройство.</p>
+          <textarea id="code" rows="3" readonly aria-label="Код сохранения"></textarea>
+          <div class="row"><button id="btnExport" class="btn" type="button">Получить и скопировать код</button></div>
+          <textarea id="importCode" rows="3" placeholder="Вставь сюда код сохранения" aria-label="Код для загрузки"></textarea>
+          <div class="row">
+            <button id="btnImport" class="btn" type="button">Загрузить код</button>
+            <button id="btnReset" class="btn" type="button">Сбросить всё</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var KEY = 'jelly-pet-v1';
+  var R = 1.15;
+  // Адрес Firebase Realtime Database для онлайн-рейтинга, например:
+  // 'https://my-game-default-rtdb.europe-west1.firebasedatabase.app'
+  // Пока пусто, рейтинг выключен.
+  var LB_URL = '';
+
+  /* ---------- data ---------- */
+  var STAGES = [
+    { name: 'Капля',            at: 0,     mult: 1,    size: 0.78, c1: '#a6f0d9', c2: '#3fbf99' },
+    { name: 'Желейка',          at: 2000,  mult: 1.15, size: 0.88, c1: '#ffc2d6', c2: '#ee6a98' },
+    { name: 'Желе-рыцарь',      at: 1e5,   mult: 1.35, size: 0.98, c1: '#b9d3ff', c2: '#5b8be6' },
+    { name: 'Желе-дракон',      at: 5e6,   mult: 1.7,  size: 1.06, c1: '#ffcea3', c2: '#ef7b35' },
+    { name: 'Звёздный монарх',  at: 2.5e8, mult: 2.2,  size: 1.14, c1: '#e0c9ff', c2: '#8a5cf0' }
+  ];
+  var ITEMS = [
+    { id: 'c1', kind: 'click', name: 'Мягкий тык',            val: 1,      base: 15 },
+    { id: 'a1', kind: 'auto',  name: 'Головастик-помощник',   val: 1,      base: 40 },
+    { id: 'a2', kind: 'auto',  name: 'Желейная ферма',        val: 8,      base: 450 },
+    { id: 'c2', kind: 'click', name: 'Липкая перчатка',       val: 6,      base: 600 },
+    { id: 'a3', kind: 'auto',  name: 'Фабрика сладостей',     val: 60,     base: 5000 },
+    { id: 'c3', kind: 'click', name: 'Золотая ложка',         val: 40,     base: 12000 },
+    { id: 'a4', kind: 'auto',  name: 'Лаборатория вкусов',    val: 400,    base: 60000 },
+    { id: 'c4', kind: 'click', name: 'Желейная пушка',        val: 300,    base: 250000 },
+    { id: 'a5', kind: 'auto',  name: 'Портал в мир желе',     val: 3000,   base: 900000 },
+    { id: 'c5', kind: 'click', name: 'Кулак-великан',         val: 2500,   base: 4e6 },
+    { id: 'a6', kind: 'auto',  name: 'Звёздная кондитерская', val: 25000,  base: 15e6 },
+    { id: 'a7', kind: 'auto',  name: 'Желейная галактика',    val: 200000, base: 250e6 }
+  ];
+  var UPS = [
+    { id: 'u1', name: 'Крепкий кулачок',     desc: 'Тыки ×2',          t: 'click', m: 2, cost: 500 },
+    { id: 'u2', name: 'Быстрое пищеварение', desc: 'Помощники ×2',     t: 'auto',  m: 2, cost: 2500 },
+    { id: 'u3', name: 'Радужное желе',       desc: 'Всё желе ×2',      t: 'all',   m: 2, cost: 50000 },
+    { id: 'u4', name: 'Вкусные пупырышки',   desc: 'Тыки ×3',          t: 'click', m: 3, cost: 3e5 },
+    { id: 'u5', name: 'Квантовая начинка',   desc: 'Всё желе ×3',      t: 'all',   m: 3, cost: 5e6 },
+    { id: 'u6', name: 'Желейная лавина',     desc: 'Помощники ×3',     t: 'auto',  m: 3, cost: 4e7 }
+  ];
+  var UPMAP = {}; UPS.forEach(function (u) { UPMAP[u.id] = u; });
+
+  var ACH = [
+    { id: 'k1',  name: 'Первый тык',        desc: 'Сделай первый тык',               ok: function (s) { return s.clicks >= 1; } },
+    { id: 'k2',  name: 'Разминка',          desc: '100 тыков',                       ok: function (s) { return s.clicks >= 100; } },
+    { id: 'k3',  name: 'Мозоль на пальце',  desc: '1 000 тыков',                     ok: function (s) { return s.clicks >= 1000; } },
+    { id: 'k4',  name: 'Неутомимый',        desc: '10 000 тыков',                    ok: function (s) { return s.clicks >= 10000; } },
+    { id: 'j1',  name: 'Первая тысяча',     desc: 'Набери 1 000 желе за всё время',  ok: function (s) { return s.ever >= 1e3; } },
+    { id: 'j2',  name: 'Желейный миллион',  desc: 'Набери 1 млн желе',               ok: function (s) { return s.ever >= 1e6; } },
+    { id: 'j3',  name: 'Миллиардер',        desc: 'Набери 1 млрд желе',              ok: function (s) { return s.ever >= 1e9; } },
+    { id: 'b1',  name: 'Первая покупка',    desc: 'Купи любого помощника',           ok: function (s) { return owned(s) >= 1; } },
+    { id: 'b2',  name: 'Целая команда',     desc: 'Держи 25 помощников и улучшений', ok: function (s) { return owned(s) >= 25; } },
+    { id: 'b3',  name: 'Мастер усилений',   desc: 'Купи 3 усиления',                 ok: function (s) { return s.ups.length >= 3; } },
+    { id: 'c1',  name: 'Разгон на полную',  desc: 'Доведи разгон до максимума',      ok: function (s) { return s.bestCombo >= 100; } },
+    { id: 'c2',  name: 'Скорострел',        desc: '8 тыков за одну секунду',         ok: function (s) { return s.bestCps >= 8; } },
+    { id: 'g1',  name: 'Звёздный ловец',    desc: 'Поймай золотую звезду',           ok: function (s) { return s.golds >= 1; } },
+    { id: 'g2',  name: 'Охотник за звёздами', desc: 'Поймай 10 золотых звёзд',       ok: function (s) { return s.golds >= 10; } },
+    { id: 'f1',  name: 'Заботливый хозяин', desc: 'Покорми питомца 5 раз',           ok: function (s) { return s.feeds >= 5; } },
+    { id: 'e1',  name: 'Эволюция',          desc: 'Питомец стал Желейкой',           ok: function (s) { return stageOf(s) >= 1; } },
+    { id: 'e2',  name: 'Рыцарский орден',   desc: 'Питомец стал Желе-рыцарем',       ok: function (s) { return stageOf(s) >= 2; } },
+    { id: 'e3',  name: 'Огнедышащий',       desc: 'Питомец стал Желе-драконом',      ok: function (s) { return stageOf(s) >= 3; } },
+    { id: 'e4',  name: 'Корона и звёзды',   desc: 'Питомец стал Звёздным монархом',  ok: function (s) { return stageOf(s) >= 4; } },
+    { id: 'p1',  name: 'Всё сначала',       desc: 'Соверши перерождение',            ok: function (s) { return s.prestiges >= 1; } },
+    { id: 'd1',  name: 'Постоянный гость',  desc: 'Забирай подарок дня 3 дня подряд', ok: function (s) { return s.daily.streak >= 3; } }
+  ];
+
+  /* ---------- state ---------- */
+  function DEF() {
+    return {
+      jelly: 0, run: 0, ever: 0, clicks: 0, own: {}, ups: [], stars: 0, prestiges: 0,
+      sat: 75, feeds: 0, golds: 0, bestCombo: 0, bestCps: 0, ach: {}, name: 'Бонк',
+      sound: true, mode: 1, last: Date.now(), daily: { last: '', streak: 0 },
+      frenzy: 0, stageSeen: 0, play: 0, theme: '', nick: '', pid: ''
+    };
+  }
+  function num(v, d) { return typeof v === 'number' && isFinite(v) ? v : d; }
+  function merge(o) {
+    var d = DEF();
+    if (!o || typeof o !== 'object') return d;
+    ['jelly', 'run', 'ever', 'clicks', 'stars', 'prestiges', 'sat', 'feeds', 'golds', 'bestCombo', 'bestCps', 'mode', 'last', 'frenzy', 'stageSeen', 'play']
+      .forEach(function (k) { d[k] = Math.max(0, num(o[k], d[k])); });
+    if (typeof o.name === 'string') d.name = o.name.slice(0, 14);
+    if (typeof o.nick === 'string') d.nick = o.nick.slice(0, 14);
+    if (typeof o.pid === 'string' && /^[a-z0-9]{8,24}$/i.test(o.pid)) d.pid = o.pid;
+    if (typeof o.sound === 'boolean') d.sound = o.sound;
+    if (o.theme === 'light' || o.theme === 'dark') d.theme = o.theme;
+    if (o.own && typeof o.own === 'object') ITEMS.forEach(function (it) { d.own[it.id] = Math.max(0, Math.floor(num(o.own[it.id], 0))); });
+    if (Array.isArray(o.ups)) d.ups = o.ups.filter(function (id) { return UPMAP[id]; });
+    if (o.ach && typeof o.ach === 'object') ACH.forEach(function (a) { if (o.ach[a.id]) d.ach[a.id] = 1; });
+    if (o.daily && typeof o.daily === 'object') {
+      d.daily.last = typeof o.daily.last === 'string' ? o.daily.last : '';
+      d.daily.streak = Math.max(0, Math.floor(num(o.daily.streak, 0)));
+    }
+    if (d.mode !== 0 && d.mode !== 1 && d.mode !== 10) d.mode = 1;
+    d.sat = Math.min(100, d.sat);
+    return d;
+  }
+  var S = DEF();
+  try { var raw = localStorage.getItem(KEY); if (raw) S = merge(JSON.parse(raw)); } catch (e) {}
+  function save() { try { S.last = Date.now(); localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+  function owned(s) { var n = 0; ITEMS.forEach(function (it) { n += s.own[it.id] || 0; }); return n; }
+  function stageOf(s) { var k = 0; for (var i = 0; i < STAGES.length; i++) if (s.ever >= STAGES[i].at) k = i; return k; }
+  function stageIdx() { return stageOf(S); }
+  function satMult() { return S.sat >= 70 ? 1.4 : S.sat >= 30 ? 1 : S.sat > 0 ? 0.8 : 0.6; }
+  function achCount() { return Object.keys(S.ach).length; }
+
+  function calc() {
+    var cb = 1, ps = 0, cm = 1, am = 1, gm = 1;
+    ITEMS.forEach(function (it) {
+      var o = S.own[it.id] || 0;
+      if (it.kind === 'click') cb += o * it.val; else ps += o * it.val;
+    });
+    S.ups.forEach(function (id) {
+      var u = UPMAP[id]; if (!u) return;
+      if (u.t === 'click') cm *= u.m; else if (u.t === 'auto') am *= u.m; else gm *= u.m;
+    });
+    var global = gm * (1 + 0.25 * S.stars) * (1 + 0.02 * achCount()) * STAGES[stageIdx()].mult * satMult() * (S.frenzy > 0 ? 7 : 1);
+    return { cb: cb, ps: ps, cm: cm, am: am, global: global, click: cb * cm * global, pps: ps * am * global };
+  }
+
+  /* ---------- helpers ---------- */
+  var SUF = ['', 'тыс.', 'млн', 'млрд', 'трлн', 'квдрлн', 'квнтлн', 'скстлн'];
+  function fmt(n) {
+    if (!isFinite(n)) return '∞';
+    if (n < 0) n = 0;
+    if (n < 10) return (Math.round(n * 10) / 10).toString().replace('.', ',');
+    if (n < 1e6) return Math.floor(n).toLocaleString('ru-RU');
+    var i = Math.min(SUF.length - 1, Math.floor(Math.log10(n) / 3));
+    var v = n / Math.pow(1000, i);
+    return v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0).replace('.', ',') + ' ' + SUF[i];
+  }
+  function fmtX(x) { return '×' + (Math.round(x * 100) / 100).toString().replace('.', ','); }
+  function fmtTime(sec) {
+    sec = Math.floor(sec);
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+    return h > 0 ? h + ' ч ' + m + ' мин' : m > 0 ? m + ' мин ' + (sec % 60) + ' с' : sec + ' с';
+  }
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var dayKey = function (d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  var rand = function (a, b) { return a + Math.random() * (b - a); };
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  var tnow = function () { return performance.now() / 1000; };
+
+  function itemCost(it, n) {
+    var o = S.own[it.id] || 0, total = 0, cur = it.base * Math.pow(R, o);
+    for (var i = 0; i < n; i++) { total += Math.floor(cur); cur *= R; }
+    return total;
+  }
+  function itemMax(it) {
+    var o = S.own[it.id] || 0, cur = it.base * Math.pow(R, o), total = 0, n = 0;
+    while (n < 1000) {
+      var c = Math.floor(cur);
+      if (total + c > S.jelly) break;
+      total += c; cur *= R; n++;
+    }
+    return n;
+  }
+  function buyCount(it) { return S.mode === 0 ? Math.max(1, itemMax(it)) : S.mode; }
+
+  /* ---------- sound ---------- */
+  var AC = null;
+  function tone(f, d, type, v, slide) {
+    if (!S.sound) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      var t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(f, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(f * slide, t + d);
+      g.gain.setValueAtTime(v || 0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g); g.connect(AC.destination);
+      o.start(t); o.stop(t + d);
+    } catch (e) {}
+  }
+  function sfx(kind) {
+    if (kind === 'poke') tone(300 + combo * 3 + rand(0, 30), 0.1, 'sine', 0.05, 1.7);
+    else if (kind === 'buy') { tone(520, 0.08, 'triangle', 0.05); setTimeout(function () { tone(780, 0.12, 'triangle', 0.05); }, 70); }
+    else if (kind === 'gold') { tone(660, 0.1, 'triangle', 0.06); setTimeout(function () { tone(880, 0.1, 'triangle', 0.06); }, 80); setTimeout(function () { tone(1320, 0.18, 'triangle', 0.06); }, 160); }
+    else if (kind === 'feed') tone(240, 0.18, 'sine', 0.06, 1.8);
+    else if (kind === 'evo') [392, 494, 587, 784].forEach(function (f, i) { setTimeout(function () { tone(f, 0.22, 'triangle', 0.07); }, i * 110); });
+    else if (kind === 'ach') { tone(700, 0.1, 'sine', 0.05); setTimeout(function () { tone(1050, 0.14, 'sine', 0.05); }, 90); }
+  }
+
+  /* ---------- toasts ---------- */
+  var toastBox = $('#toasts');
+  function toast(msg, kind) {
+    var d = document.createElement('div');
+    d.className = 'toast' + (kind ? ' ' + kind : '');
+    d.textContent = msg;
+    toastBox.appendChild(d);
+    while (toastBox.children.length > 4) toastBox.removeChild(toastBox.firstChild);
+    setTimeout(function () { d.classList.add('out'); setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 320); }, 3600);
+  }
+
+  /* ---------- canvas pet ---------- */
+  var cv = $('#cv'), ctx = cv.getContext('2d');
+  var W = 400, H = 340, GY = 292, CX = 200;
+  var dpr = 1, cscale = 1;
+  var pet = { sq: 0, vsq: 0, open: 0, blink: 0, nextBlink: 2, blinkT: -1, px: CX, py: 150 };
+  var particles = [], floats = [];
+  var col = { accent: '#d0215c', surface: '#fbfffd' };
+  var combo = 0, lastClickT = -10, clickTimes = [];
+
+  function readColors() {
+    var cs = getComputedStyle(document.documentElement);
+    col.accent = cs.getPropertyValue('--accent').trim() || col.accent;
+    col.surface = cs.getPropertyValue('--surface').trim() || col.surface;
+  }
+  function resize() {
+    var r = cv.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.round(r.width * dpr));
+    cv.height = Math.max(1, Math.round(r.height * dpr));
+    cscale = r.width / W;
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(cv); else window.addEventListener('resize', resize);
+
+  function burst(x, y, n, colors, speed) {
+    for (var i = 0; i < n; i++) {
+      var a = rand(-Math.PI, 0), sp = rand(speed * 0.4, speed);
+      particles.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t: 0, max: rand(0.5, 0.95), r: rand(2.5, 5.5), c: colors[Math.floor(Math.random() * colors.length)] });
+    }
+  }
+
+  function star4(x, y, r, fill) {
+    ctx.beginPath();
+    for (var i = 0; i < 8; i++) {
+      var rr = i % 2 === 0 ? r : r * 0.4, a = -Math.PI / 2 + i * Math.PI / 4;
+      ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  }
+
+  function drawPet(t, dt) {
+    var idx = stageIdx(), st = STAGES[idx];
+    var rx = 92 * st.size, ry = 78 * st.size;
+
+    pet.vsq += (-220 * pet.sq - 12 * pet.vsq) * dt;
+    pet.sq += pet.vsq * dt;
+    pet.sq = clamp(pet.sq, -0.6, 0.6);
+    if (pet.open > 0) pet.open -= dt;
+    if (pet.blinkT < 0) { pet.nextBlink -= dt; if (pet.nextBlink <= 0) { pet.blinkT = 0; pet.nextBlink = rand(2, 5); } }
+    else { pet.blinkT += dt; if (pet.blinkT > 0.16) pet.blinkT = -1; }
+    pet.blink = pet.blinkT < 0 ? 0 : Math.sin(pet.blinkT / 0.16 * Math.PI);
+
+    var sqv = pet.sq + Math.sin(t * 2.2) * 0.012;
+    var sy = 1 + sqv * 0.5, sx = 1 - sqv * 0.4;
+
+    // aura for the top form
+    if (idx === 4) {
+      var gl = ctx.createRadialGradient(CX, GY - ry * 0.6, 10, CX, GY - ry * 0.6, rx * 2);
+      gl.addColorStop(0, 'rgba(200,160,255,.55)'); gl.addColorStop(1, 'rgba(200,160,255,0)');
+      ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
+    }
+    // shadow
+    ctx.fillStyle = 'rgba(10,30,35,.22)';
+    ctx.beginPath(); ctx.ellipse(CX, GY + 5, rx * sx * 0.95, 11, 0, 0, 7); ctx.fill();
+
+    ctx.save();
+    ctx.translate(CX, GY); ctx.scale(sx, sy);
+
+    // wings behind the dragon
+    if (idx === 3) {
+      ctx.fillStyle = '#d9621f'; ctx.strokeStyle = 'rgba(30,15,30,.5)'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+      [-1, 1].forEach(function (s) {
+        ctx.beginPath();
+        ctx.moveTo(s * rx * 0.8, -ry * 0.5);
+        ctx.lineTo(s * rx * 1.55, -ry * 1.15);
+        ctx.lineTo(s * rx * 1.3, -ry * 0.55);
+        ctx.lineTo(s * rx * 1.5, -ry * 0.2);
+        ctx.lineTo(s * rx * 0.85, -ry * 0.12);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      });
+    }
+
+    // body
+    ctx.beginPath();
+    ctx.moveTo(-rx, 0);
+    ctx.bezierCurveTo(-rx, -ry * 1.38, rx, -ry * 1.38, rx, 0);
+    ctx.bezierCurveTo(rx, ry * 0.36, -rx, ry * 0.36, -rx, 0);
+    ctx.closePath();
+    var g = ctx.createRadialGradient(-rx * 0.3, -ry * 0.8, rx * 0.1, 0, -ry * 0.3, rx * 1.3);
+    g.addColorStop(0, st.c1); g.addColorStop(1, st.c2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(30,15,40,.45)'; ctx.stroke();
+
+    // gloss
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.ellipse(-rx * 0.45, -ry * 0.8, rx * 0.2, ry * 0.1, -0.55, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(-rx * 0.18, -ry * 0.98, 4, 0, 7); ctx.fill();
+
+    // eyes
+    var ey = -ry * 0.46, ex = rx * 0.34, er = rx * 0.17;
+    var lx = clamp((pet.px - CX) / 150, -1, 1), ly = clamp((pet.py - (GY - ry * 0.5)) / 150, -1, 1);
+    [-1, 1].forEach(function (s) {
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(30,15,40,.55)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(s * ex, ey, er, Math.max(1, er * (1 - pet.blink)), 0, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1b1230';
+      ctx.beginPath(); ctx.ellipse(s * ex + lx * er * 0.4, ey + ly * er * 0.35, er * 0.52, Math.max(1, er * 0.52 * (1 - pet.blink)), 0, 0, 7); ctx.fill();
+      if (pet.blink < 0.4) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s * ex + lx * er * 0.4 - er * 0.16, ey + ly * er * 0.35 - er * 0.2, er * 0.15, 0, 7); ctx.fill(); }
+    });
+    // cheeks
+    ctx.fillStyle = 'rgba(255,80,125,.35)';
+    [-1, 1].forEach(function (s) { ctx.beginPath(); ctx.ellipse(s * rx * 0.62, -ry * 0.26, rx * 0.1, ry * 0.06, 0, 0, 7); ctx.fill(); });
+    // mouth
+    var my = -ry * 0.24;
+    ctx.strokeStyle = '#1b1230'; ctx.fillStyle = '#1b1230'; ctx.lineWidth = 3.2; ctx.lineCap = 'round';
+    ctx.beginPath();
+    if (pet.open > 0) { ctx.ellipse(0, my + 6, 9, 11, 0, 0, 7); ctx.fill(); }
+    else if (S.sat >= 55) { ctx.moveTo(-14, my); ctx.quadraticCurveTo(0, my + 20, 14, my); ctx.stroke(); }
+    else if (S.sat >= 25) { ctx.moveTo(-9, my + 6); ctx.lineTo(9, my + 6); ctx.stroke(); }
+    else { ctx.moveTo(-12, my + 12); ctx.quadraticCurveTo(0, my - 4, 12, my + 12); ctx.stroke(); }
+
+    // accessories
+    if (idx === 1) {
+      ctx.strokeStyle = '#2f9a55'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(0, -ry * 1.0); ctx.quadraticCurveTo(2, -ry * 1.0 - 14, 5, -ry * 1.0 - 24); ctx.stroke();
+      ctx.fillStyle = '#48c46f'; ctx.strokeStyle = 'rgba(20,60,30,.6)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(-8, -ry - 26, 13, 7, -0.5, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(16, -ry - 30, 13, 7, 0.5, 0, 7); ctx.fill(); ctx.stroke();
+    } else if (idx === 2) {
+      ctx.fillStyle = '#c3ccdb'; ctx.strokeStyle = 'rgba(30,15,40,.55)'; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-rx * 0.8, -ry * 0.64);
+      ctx.bezierCurveTo(-rx * 0.72, -ry * 1.2, rx * 0.72, -ry * 1.2, rx * 0.8, -ry * 0.64);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, -ry * 1.06); ctx.lineTo(0, -ry * 0.64); ctx.stroke();
+      ctx.fillStyle = '#e03a4e';
+      ctx.beginPath(); ctx.ellipse(0, -ry * 1.08 - 9, 8, 15, 0.25, 0, 7); ctx.fill(); ctx.stroke();
+    } else if (idx === 3) {
+      ctx.fillStyle = '#f6e6c4'; ctx.strokeStyle = 'rgba(30,15,40,.55)'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+      [-1, 1].forEach(function (s) {
+        ctx.beginPath();
+        ctx.moveTo(s * rx * 0.28, -ry * 1.0);
+        ctx.lineTo(s * rx * 0.55, -ry * 1.48);
+        ctx.lineTo(s * rx * 0.58, -ry * 0.93);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      });
+    } else if (idx === 4) {
+      var by = -ry * 0.97;
+      ctx.fillStyle = '#ffd23f'; ctx.strokeStyle = 'rgba(70,40,0,.65)'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-30, by); ctx.lineTo(-34, by - 32); ctx.lineTo(-16, by - 15); ctx.lineTo(0, by - 38);
+      ctx.lineTo(16, by - 15); ctx.lineTo(34, by - 32); ctx.lineTo(30, by); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ff4f7b';
+      [-18, 0, 18].forEach(function (x) { ctx.beginPath(); ctx.arc(x, by - 8, 4, 0, 7); ctx.fill(); });
+    }
+    ctx.restore();
+
+    if (idx === 4) {
+      for (var i = 0; i < 4; i++) {
+        var a = t * 0.9 + i * Math.PI / 2;
+        star4(CX + Math.cos(a) * rx * 1.55, GY - ry * 0.9 + Math.sin(a) * ry * 0.5, 8 + Math.sin(t * 3 + i) * 2, '#ffd23f');
+      }
+    }
+  }
+
+  function render(t, dt) {
+    ctx.setTransform(dpr * cscale, 0, 0, dpr * cscale, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    drawPet(t, dt);
+    var i, p;
+    for (i = particles.length - 1; i >= 0; i--) {
+      p = particles[i]; p.t += dt;
+      if (p.t >= p.max) { particles.splice(i, 1); continue; }
+      p.vy += 700 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      ctx.globalAlpha = 1 - p.t / p.max;
+      ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+    for (i = floats.length - 1; i >= 0; i--) {
+      p = floats[i]; p.t += dt;
+      if (p.t > 0.9) { floats.splice(i, 1); continue; }
+      p.y -= 60 * dt;
+      ctx.globalAlpha = 1 - Math.pow(p.t / 0.9, 2);
+      ctx.font = '700 ' + p.size + 'px Unbounded, Rubik, sans-serif';
+      ctx.lineWidth = 5; ctx.strokeStyle = col.surface; ctx.strokeText(p.text, p.x, p.y);
+      ctx.fillStyle = col.accent; ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* ---------- input ---------- */
+  function toLogical(e) {
+    var r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+  }
+  function onPet(x, y) {
+    var st = STAGES[stageIdx()], rx = 92 * st.size, ry = 78 * st.size;
+    var dx = (x - CX) / (rx * 1.3), dy = (y - (GY - ry * 0.55)) / (ry * 1.4);
+    return dx * dx + dy * dy <= 1;
+  }
+  function poke(x, y) {
+    var c = calc(), g = c.click * (1 + combo / 100);
+    S.jelly += g; S.run += g; S.ever += g; S.clicks++;
+    combo = Math.min(100, combo + 5);
+    if (combo > S.bestCombo) S.bestCombo = combo;
+    lastClickT = tnow(); clickTimes.push(lastClickT);
+    pet.vsq = -6.5; pet.open = 0.25;
+    var st = STAGES[stageIdx()];
+    burst(x, y, 5, [st.c1, st.c2, '#ffffff'], 190);
+    floats.push({ x: x + rand(-14, 14), y: y - 14, t: 0, text: '+' + fmt(g), size: 18 });
+    sfx('poke');
+    ui();
+  }
+  cv.addEventListener('pointerdown', function (e) {
+    var p = toLogical(e); pet.px = p.x; pet.py = p.y;
+    if (onPet(p.x, p.y)) { e.preventDefault(); poke(p.x, p.y); }
+  });
+  cv.addEventListener('pointermove', function (e) { var p = toLogical(e); pet.px = p.x; pet.py = p.y; });
+  cv.addEventListener('pointerleave', function () { pet.px = CX; pet.py = 150; });
+  cv.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); poke(CX + rand(-30, 30), 190); }
+  });
+
+  /* ---------- shop UI ---------- */
+  var shopList = $('#shopList'), upList = $('#upList');
+  ITEMS.forEach(function (it) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'item';
+    b.innerHTML = '<span class="own"></span><span class="meta"><b class="nm"></b><small class="ds"></small></span><span class="cost"></span>';
+    it.el = b; it.eOwn = b.querySelector('.own'); it.eNm = b.querySelector('.nm'); it.eDs = b.querySelector('.ds'); it.eCost = b.querySelector('.cost');
+    b.addEventListener('click', function () { buyItem(it); });
+    shopList.appendChild(b);
+  });
+  UPS.forEach(function (u) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'item';
+    b.innerHTML = '<span class="own"></span><span class="meta"><b class="nm"></b><small class="ds"></small></span><span class="cost"></span>';
+    u.el = b; u.eOwn = b.querySelector('.own'); u.eNm = b.querySelector('.nm'); u.eDs = b.querySelector('.ds'); u.eCost = b.querySelector('.cost');
+    b.addEventListener('click', function () { buyUp(u); });
+    upList.appendChild(b);
+  });
+  var achGrid = $('#achGrid');
+  ACH.forEach(function (a) {
+    var d = document.createElement('div');
+    d.className = 'ach'; d.innerHTML = '<b></b><small></small>';
+    d.querySelector('b').textContent = a.name; d.querySelector('small').textContent = a.desc;
+    a.el = d; achGrid.appendChild(d);
+  });
+
+  function buyItem(it) {
+    var n = buyCount(it), cost = itemCost(it, n);
+    if (S.jelly < cost) { tone(140, 0.12, 'square', 0.03); return; }
+    S.jelly -= cost; S.own[it.id] = (S.own[it.id] || 0) + n;
+    sfx('buy'); checkAch(); ui();
+  }
+  function buyUp(u) {
+    if (S.ups.indexOf(u.id) >= 0 || S.jelly < u.cost) { return; }
+    S.jelly -= u.cost; S.ups.push(u.id);
+    sfx('buy'); checkAch(); ui();
+  }
+
+  var tabs = document.querySelectorAll('.tab');
+  function setTab(id) {
+    tabs.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === id ? 'true' : 'false'); });
+    ['shop', 'ups', 'ach', 'lb', 'more'].forEach(function (k) { $('#pane-' + k).hidden = k !== id; });
+    if (id === 'lb') lbLoad();
+    ui();
+  }
+  tabs.forEach(function (b) { b.addEventListener('click', function () { setTab(b.dataset.tab); }); });
+  document.querySelectorAll('#modeSeg button').forEach(function (b) {
+    b.addEventListener('click', function () { S.mode = parseInt(b.dataset.mode, 10); ui(); });
+  });
+
+  /* ---------- feeding, gifts, gold ---------- */
+  function feedCost() { var c = calc(); return Math.max(25, Math.round(c.ps * 20 + c.cb * 10)); }
+  $('#feed').addEventListener('click', function () {
+    var cost = feedCost();
+    if (S.sat >= 85 || S.jelly < cost) { tone(140, 0.12, 'square', 0.03); return; }
+    S.jelly -= cost; S.sat = Math.min(100, S.sat + 40); S.feeds++;
+    pet.vsq = -5; pet.open = 0.6; burst(CX, 200, 10, ['#ffd23f', '#ff7ca3', '#ffffff'], 220);
+    sfx('feed'); checkAch(); ui();
+  });
+
+  function nextStreak() {
+    var y = new Date(); y.setDate(y.getDate() - 1);
+    return S.daily.last === dayKey(y) ? S.daily.streak + 1 : 1;
+  }
+  function giftValue(streak) { return Math.round(Math.max(250, calc().pps * 300) * (1 + 0.1 * Math.min(streak, 7))); }
+  $('#gift').addEventListener('click', function () {
+    var today = dayKey(new Date());
+    if (S.daily.last === today) return;
+    var st = nextStreak(), g = giftValue(st);
+    S.daily.streak = st; S.daily.last = today;
+    S.jelly += g; S.run += g; S.ever += g;
+    burst(CX, 180, 24, ['#ffd23f', '#ff7ca3', '#8fe9cd', '#ffffff'], 320);
+    sfx('gold'); toast('Подарок дня: +' + fmt(g) + ' желе. Дней подряд: ' + st, 'gold');
+    checkAch(); ui(); save();
+  });
+
+  var goldEl = $('#gold'), goldLife = 0, goldTimer = 25;
+  function spawnGold() {
+    goldEl.style.left = rand(8, 76).toFixed(1) + '%';
+    goldEl.style.top = rand(10, 52).toFixed(1) + '%';
+    goldEl.hidden = false; goldLife = 12; goldTimer = rand(45, 90);
+  }
+  function hideGold() { goldEl.hidden = true; }
+  goldEl.addEventListener('click', function () {
+    hideGold(); S.golds++;
+    var c = calc();
+    if (Math.random() < 0.5) {
+      var g = Math.max(c.pps * 120, c.click * 150, 100);
+      S.jelly += g; S.run += g; S.ever += g;
+      toast('Золотая звезда: +' + fmt(g) + ' желе', 'gold');
+    } else {
+      S.frenzy += 20;
+      toast('Звёздный разгон: всё желе ×7 на 20 секунд', 'gold');
+    }
+    burst(CX, 160, 20, ['#ffd23f', '#fff3b0'], 300);
+    sfx('gold'); checkAch(); ui();
+  });
+
+  function celebrate(idx) {
+    var st = STAGES[idx];
+    burst(CX, 200, 50, [st.c1, st.c2, '#ffd23f', '#ffffff'], 380);
+    pet.vsq = -9;
+    sfx('evo');
+    toast('Эволюция! ' + S.name + ' стал: ' + st.name + ' (доход ×' + String(st.mult).replace('.', ',') + ')', 'gold');
+  }
+
+  function checkAch() {
+    ACH.forEach(function (a) {
+      if (!S.ach[a.id] && a.ok(S)) {
+        S.ach[a.id] = 1; sfx('ach');
+        toast('Награда: ' + a.name + ' (+2% к доходу)');
+      }
+    });
+  }
+
+  /* ---------- prestige ---------- */
+  function starGain() { return Math.floor(Math.sqrt(S.run / 1e6)); }
+  var pBtn = $('#pBtn'), pArm = 0;
+  pBtn.addEventListener('click', function () {
+    var gain = starGain();
+    if (gain < 1) return;
+    if (!pArm) {
+      pArm = setTimeout(function () { pArm = 0; ui(); }, 4000);
+      pBtn.textContent = 'Точно? Нажми ещё раз';
+      return;
+    }
+    clearTimeout(pArm); pArm = 0;
+    S.stars += gain; S.prestiges++;
+    S.jelly = 0; S.run = 0; S.own = {}; S.ups = []; S.frenzy = 0; combo = 0;
+    hideGold();
+    burst(CX, 200, 40, ['#ffd23f', '#ffffff'], 380);
+    toast('Перерождение! Получено звёзд: ' + gain, 'gold');
+    checkAch(); ui(); save();
+  });
+
+  /* ---------- save / import / reset ---------- */
+  var codeBox = $('#code');
+  $('#btnExport').addEventListener('click', function () {
+    var c = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+    codeBox.value = c;
+    var done = false;
+    try {
+      navigator.clipboard.writeText(c).then(function () { toast('Код скопирован'); }, function () { codeBox.select(); toast('Выдели и скопируй код вручную'); });
+      done = true;
+    } catch (e) {}
+    if (!done) { codeBox.select(); toast('Выдели и скопируй код вручную'); }
+  });
+  $('#btnImport').addEventListener('click', function () {
+    var v = $('#importCode').value.trim();
+    try {
+      var obj = JSON.parse(decodeURIComponent(escape(atob(v))));
+      S = merge(obj); S.last = Date.now();
+      applyTheme(); ensurePid(); $('#petName').value = S.name; nickEl.value = S.nick; combo = 0;
+      toast('Прогресс загружен'); ui(); save();
+    } catch (e) { toast('Не удалось прочитать код. Проверь, что скопировал его целиком.'); }
+  });
+  var rBtn = $('#btnReset'), rArm = 0;
+  rBtn.addEventListener('click', function () {
+    if (!rArm) {
+      rArm = setTimeout(function () { rArm = 0; rBtn.textContent = 'Сбросить всё'; }, 4000);
+      rBtn.textContent = 'Точно удалить? Нажми ещё раз';
+      return;
+    }
+    clearTimeout(rArm); rArm = 0; rBtn.textContent = 'Сбросить всё';
+    S = DEF(); ensurePid(); combo = 0; hideGold(); applyTheme(); $('#petName').value = S.name; nickEl.value = '';
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    toast('Всё сброшено. Начинаем заново'); ui();
+  });
+
+  /* ---------- header buttons ---------- */
+  var nameEl = $('#petName');
+  nameEl.addEventListener('input', function () { S.name = nameEl.value.slice(0, 14) || 'Бонк'; });
+  function applyTheme() {
+    if (S.theme) document.documentElement.setAttribute('data-theme', S.theme);
+    else document.documentElement.removeAttribute('data-theme');
+    setTimeout(readColors, 30);
+  }
+  $('#btnTheme').addEventListener('click', function () {
+    var dark = S.theme === 'dark' || (!S.theme && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    S.theme = dark ? 'light' : 'dark'; applyTheme(); save();
+  });
+  $('#btnSound').addEventListener('click', function () { S.sound = !S.sound; ui(); save(); });
+
+  /* ---------- ui refresh ---------- */
+  var el = {
+    jelly: $('#jelly'), rClick: $('#rClick'), rPps: $('#rPps'), rMult: $('#rMult'),
+    chip: $('#stageChip'), evoBar: $('#evoBar'), evoText: $('#evoText'),
+    comboTxt: $('#comboTxt'), comboBar: $('#comboBar'), satTxt: $('#satTxt'), satBar: $('#satBar'),
+    feed: $('#feed'), gift: $('#gift'), frenzy: $('#frenzy'), btnSound: $('#btnSound'),
+    achHead: $('#achHead'), stats: $('#stats'), pInfo: $('#pInfo')
+  };
+  var lastStatsAt = 0;
+
+  function ui() {
+    var c = calc(), idx = stageIdx(), st = STAGES[idx];
+    el.jelly.textContent = fmt(Math.floor(S.jelly));
+    el.rClick.textContent = fmt(c.click);
+    el.rPps.textContent = fmt(c.pps);
+    el.rMult.textContent = fmtX(c.global);
+    el.chip.textContent = 'Форма ' + (idx + 1) + ' из ' + STAGES.length + ' · ' + st.name;
+    var nx = STAGES[idx + 1];
+    if (nx) {
+      el.evoBar.style.width = clamp((S.ever - st.at) / (nx.at - st.at) * 100, 0, 100) + '%';
+      el.evoText.textContent = 'До формы «' + nx.name + '»: ещё ' + fmt(nx.at - S.ever) + ' желе';
+    } else { el.evoBar.style.width = '100%'; el.evoText.textContent = 'Высшая форма достигнута'; }
+
+    el.comboBar.style.width = combo + '%';
+    el.comboTxt.textContent = fmtX(1 + combo / 100) + ' к тыку';
+    el.satBar.style.width = S.sat + '%';
+    var sl = S.sat >= 70 ? 'сыт ×1,4' : S.sat >= 30 ? 'норма ×1' : S.sat > 0 ? 'голоден ×0,8' : 'очень голоден ×0,6';
+    el.satTxt.textContent = sl;
+    var fc = feedCost();
+    el.feed.textContent = S.sat >= 85 ? 'Питомец сыт' : 'Покормить за ' + fmt(fc);
+    el.feed.setAttribute('aria-disabled', (S.sat >= 85 || S.jelly < fc) ? 'true' : 'false');
+
+    var today = dayKey(new Date());
+    if (S.daily.last !== today) { el.gift.hidden = false; el.gift.textContent = 'Подарок дня: +' + fmt(giftValue(nextStreak())); }
+    else el.gift.hidden = true;
+
+    if (S.frenzy > 0) { el.frenzy.hidden = false; el.frenzy.textContent = 'Разгон ×7 · ' + Math.ceil(S.frenzy) + ' с'; }
+    else el.frenzy.hidden = true;
+
+    el.btnSound.textContent = 'Звук: ' + (S.sound ? 'вкл' : 'выкл');
+    document.querySelectorAll('#modeSeg button').forEach(function (b) {
+      b.setAttribute('aria-pressed', parseInt(b.dataset.mode, 10) === S.mode ? 'true' : 'false');
+    });
+
+    // shop
+    ITEMS.forEach(function (it) {
+      var o = S.own[it.id] || 0;
+      var shown = o > 0 || S.run >= it.base * 0.5 || S.jelly >= it.base * 0.5;
+      if (!shown) {
+        it.el.className = 'item locked';
+        it.eOwn.textContent = '?'; it.eNm.textContent = '???'; it.eDs.textContent = 'Накопи больше желе, чтобы открыть'; it.eCost.textContent = '';
+        it.el.setAttribute('aria-disabled', 'true'); return;
+      }
+      var n = buyCount(it), cost = itemCost(it, n), can = S.jelly >= cost;
+      it.el.className = 'item' + (can ? ' can' : '');
+      it.el.setAttribute('aria-disabled', can ? 'false' : 'true');
+      it.eOwn.textContent = o;
+      it.eNm.textContent = it.name;
+      it.eDs.textContent = (it.kind === 'click' ? '+' + fmt(it.val) + ' за тык' : '+' + fmt(it.val) + ' в секунду') + (o ? ' · сейчас +' + fmt(o * it.val) : '');
+      it.eCost.textContent = (n > 1 ? '×' + n + ' · ' : '') + fmt(cost);
+    });
+    UPS.forEach(function (u) {
+      var done = S.ups.indexOf(u.id) >= 0;
+      var shown = done || S.run >= u.cost * 0.3 || S.jelly >= u.cost * 0.3;
+      if (done) {
+        u.el.className = 'item done'; u.eOwn.textContent = '✓'; u.eNm.textContent = u.name; u.eDs.textContent = u.desc; u.eCost.textContent = 'Куплено';
+      } else if (!shown) {
+        u.el.className = 'item locked'; u.eOwn.textContent = '?'; u.eNm.textContent = '???'; u.eDs.textContent = 'Накопи больше желе, чтобы открыть'; u.eCost.textContent = '';
+      } else {
+        var can = S.jelly >= u.cost;
+        u.el.className = 'item' + (can ? ' can' : '');
+        u.eOwn.textContent = fmtX(u.m); u.eNm.textContent = u.name; u.eDs.textContent = u.desc; u.eCost.textContent = fmt(u.cost);
+      }
+    });
+
+    // achievements
+    var n = achCount();
+    el.achHead.textContent = 'Получено ' + n + ' из ' + ACH.length + ' · бонус к доходу +' + (n * 2) + '%';
+    ACH.forEach(function (a) { a.el.className = 'ach' + (S.ach[a.id] ? ' got' : ''); });
+
+    // stars & stats
+    var gain = starGain();
+    el.pInfo.textContent = 'Звёзд сейчас: ' + S.stars + ' (бонус +' + (S.stars * 25) + '%). ' + (gain >= 1
+      ? 'Сейчас перерождение даст ещё ' + gain + '.'
+      : 'Набери за этот заход 1 млн желе, чтобы получить первую звезду. Набрано: ' + fmt(S.run) + '.');
+    if (pArm) { pBtn.textContent = 'Точно? Нажми ещё раз'; }
+    else pBtn.textContent = gain >= 1 ? 'Переродиться и получить звёзд: ' + gain : 'Пока рано';
+    pBtn.setAttribute('aria-disabled', gain >= 1 ? 'false' : 'true');
+
+    if (!$('#pane-more').hidden && performance.now() - lastStatsAt > 900) {
+      lastStatsAt = performance.now();
+      var rows = [
+        ['Тыков', S.clicks.toLocaleString('ru-RU')], ['Всего желе', fmt(S.ever)], ['Лучшая скорость', S.bestCps + ' тыков/с'],
+        ['Лучший разгон', fmtX(1 + S.bestCombo / 100)], ['Золотых звёзд', S.golds], ['Кормлений', S.feeds],
+        ['Перерождений', S.prestiges], ['Время игры', fmtTime(S.play)]
+      ];
+      el.stats.innerHTML = rows.map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'; }).join('');
+    }
+  }
+
+  /* ---------- leaderboard ---------- */
+  var lbList = $('#lbList'), lbNote = $('#lbNote'), nickEl = $('#nick'), lbSent = 0, lbBusy = false;
+  function ensurePid() {
+    if (S.pid) return;
+    var a = 'abcdefghijklmnopqrstuvwxyz0123456789', p = '';
+    for (var i = 0; i < 16; i++) p += a.charAt(Math.floor(Math.random() * a.length));
+    S.pid = p;
+  }
+  function lbBase() { return LB_URL.replace(/\/$/, ''); }
+  function lbName() { return (S.nick || S.name || 'Игрок').slice(0, 14); }
+  function lbSend(manual) {
+    if (!LB_URL) return Promise.resolve();
+    ensurePid();
+    var body = JSON.stringify({ n: lbName(), e: Math.floor(S.ever), s: stageIdx(), st: S.stars, t: Date.now() });
+    return fetch(lbBase() + '/scores/' + S.pid + '.json', { method: 'PUT', body: body })
+      .then(function (r) {
+        if (!r.ok) throw new Error('http ' + r.status);
+        lbSent = S.ever;
+        if (manual) toast('Результат отправлен');
+      })
+      .catch(function () { if (manual) toast('Не удалось отправить. Проверь интернет и правила базы.'); });
+  }
+  function lbLoad() {
+    if (!LB_URL) {
+      lbNote.textContent = 'Рейтинг не подключён. Чтобы он заработал, укажи адрес базы данных в LB_URL в начале скрипта.';
+      return;
+    }
+    if (lbBusy) return;
+    lbBusy = true; lbNote.textContent = 'Загружаю рейтинг…';
+    fetch(lbBase() + '/scores.json?orderBy=%22e%22&limitToLast=20')
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function (data) {
+        var rows = Object.keys(data || {}).map(function (k) {
+          var v = data[k] || {};
+          return { id: k, n: String(v.n || '?').slice(0, 14), e: num(v.e, 0), s: clamp(Math.floor(num(v.s, 0)), 0, STAGES.length - 1), st: num(v.st, 0) };
+        }).sort(function (a, b) { return b.e - a.e; });
+        lbList.innerHTML = '';
+        rows.forEach(function (r, i) {
+          var li = document.createElement('li'); li.className = 'lb-row' + (r.id === S.pid ? ' me' : '');
+          var rk = document.createElement('span'); rk.className = 'rk'; rk.textContent = i + 1;
+          var nm = document.createElement('span'); nm.className = 'nm2'; nm.textContent = r.n;
+          var sm = document.createElement('small'); sm.textContent = STAGES[r.s].name + (r.st > 0 ? ' · звёзд: ' + r.st : ''); nm.appendChild(sm);
+          var sc = document.createElement('span'); sc.className = 'sc'; sc.textContent = fmt(r.e);
+          li.appendChild(rk); li.appendChild(nm); li.appendChild(sc); lbList.appendChild(li);
+        });
+        lbNote.textContent = rows.length ? 'Топ игроков по желе за всё время.' : 'Пока никого нет. Будь первым!';
+      })
+      .catch(function () { lbNote.textContent = 'Не удалось загрузить рейтинг. Проверь интернет и настройки базы.'; })
+      .then(function () { lbBusy = false; });
+  }
+  nickEl.addEventListener('input', function () { S.nick = nickEl.value.trim().slice(0, 14); });
+  $('#lbRefresh').addEventListener('click', lbLoad);
+  $('#lbSend').addEventListener('click', function () {
+    if (!LB_URL) { lbLoad(); return; }
+    if (!S.nick) { toast('Сначала введи ник'); nickEl.focus(); return; }
+    lbSend(true).then(function () { lbBusy = false; lbLoad(); save(); });
+  });
+
+  /* ---------- game loop ---------- */
+  function offline(sec) {
+    sec = Math.min(sec, 8 * 3600);
+    var c = calc(), g = c.pps * sec * 0.5;
+    S.jelly += g; S.run += g; S.ever += g;
+    S.frenzy = Math.max(0, S.frenzy - sec);
+    S.sat = Math.max(0, S.sat - 0.35 * sec * 0.5);
+    combo = 0;
+    if (sec > 30 && g >= 1) toast('С возвращением! Пока тебя не было, питомец собрал ' + fmt(g) + ' желе');
+  }
+
+  function tick(dt) {
+    var c = calc(), g = c.pps * dt;
+    if (g > 0) { S.jelly += g; S.run += g; S.ever += g; }
+    S.sat = Math.max(0, S.sat - 0.35 * dt);
+    if (S.frenzy > 0) S.frenzy = Math.max(0, S.frenzy - dt);
+    S.play += dt;
+    var t = tnow();
+    if (t - lastClickT > 0.7) combo = Math.max(0, combo - 40 * dt);
+    while (clickTimes.length && t - clickTimes[0] > 1) clickTimes.shift();
+    if (clickTimes.length > S.bestCps) S.bestCps = clickTimes.length;
+    if (!goldEl.hidden) { goldLife -= dt; if (goldLife <= 0) hideGold(); }
+    else { goldTimer -= dt; if (goldTimer <= 0) spawnGold(); }
+    var idx = stageIdx();
+    if (idx > S.stageSeen) { S.stageSeen = idx; celebrate(idx); }
+  }
+
+  var lastF = performance.now(), lastWall = Date.now(), uiAcc = 0, achAcc = 0, saveAcc = 0, colAcc = 0, lbAcc = 0;
+  function frame(now) {
+    var dt = Math.min((now - lastF) / 1000, 0.25); lastF = now;
+    var wall = Date.now(), real = (wall - lastWall) / 1000; lastWall = wall;
+    if (real > 3) { offline(real); dt = 0; }
+    tick(dt);
+    render(now / 1000, dt);
+    uiAcc += dt; achAcc += dt; saveAcc += dt; colAcc += dt; lbAcc += dt;
+    if (uiAcc >= 0.1) { uiAcc = 0; ui(); }
+    if (achAcc >= 1) { achAcc = 0; checkAch(); }
+    if (saveAcc >= 5) { saveAcc = 0; save(); }
+    if (colAcc >= 1) { colAcc = 0; readColors(); }
+    if (lbAcc >= 30) { lbAcc = 0; if (LB_URL && S.nick && S.ever > lbSent + 1) lbSend(false); }
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener('visibilitychange', function () { if (document.hidden) save(); });
+  window.addEventListener('pagehide', save);
+
+  /* ---------- start ---------- */
+  nameEl.value = S.name;
+  ensurePid(); nickEl.value = S.nick;
+  applyTheme();
+  resize(); readColors();
+  var away = (Date.now() - S.last) / 1000;
+  if (away > 30) offline(away);
+  S.stageSeen = Math.max(S.stageSeen, stageIdx());
+  lastWall = Date.now();
+  checkAch(); ui();
+  requestAnimationFrame(frame);
+})();
+</script>
+</head>
+</html>
